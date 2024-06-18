@@ -1,34 +1,55 @@
 #include "Player.h"
-#include <iostream>
 
-Player::Player() : x(10), y(10), speed(1) {
-    // 初始化玩家位置和速度
-}
+Player::Player(int startX, int startY, int speed, int lives) : x(startX), y(startY), speed(speed), lives(lives) {}
 
 void Player::moveUp() {
-    y -= speed;
+    if (y > 0) y -= speed;
 }
 
 void Player::moveDown() {
-    y += speed;
+    if (y < screenHeight - 1) y += speed;
 }
 
 void Player::moveLeft() {
-    x -= speed;
+    if (x > 0) x -= speed;
 }
 
 void Player::moveRight() {
-    x += speed;
+    if (x < screenWidth - 1) x += speed;
 }
 
-void Player::shoot() {
-    // 处理玩家射击逻辑
+void Player::shoot(std::vector<Bullet>& bullets) {
+    bullets.emplace_back(x, y - 1, 2);
 }
+
 
 void Player::render() const {
-    std::cout << "\033[" << y << ";" << x << "H" << "P";
+    // 清屏
+    system("cls");
+
+    // 输出飞机
+    for (int i = 0; i < height; ++i) {
+        zeroXy(x, y + i);
+        for (int j = 0; j < width; ++j) {
+            std::cout << "X"; // 或者其他字符，例如 "X" 等
+        }
+    }
 }
 
-void Player::increaseScore(int points) {
-    score += points;
+
+
+int Player::getX() const {
+    return x;
+}
+
+int Player::getY() const {
+    return y;
+}
+
+int Player::getLives() const {
+    return lives;
+}
+
+void Player::loseLife() {
+    lives--;
 }

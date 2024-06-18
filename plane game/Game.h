@@ -1,10 +1,9 @@
-#pragma once
 #ifndef GAME_H
 #define GAME_H
 
 #include "Player.h"
-#include "Enemy.h"
 #include "Bullet.h"
+#include "Enemy.h"
 #include "Utilities.h"
 #include <vector>
 
@@ -14,17 +13,20 @@ public:
     void run();
 
 private:
+    void init();
     void processInput();
     void update();
     void render();
-    void updateScore();
+    void floatBullet();
+    void enemyFighter();
+    void handleCollisions();
+    void checkGameOver();
 
     Player player;
-    std::vector<Enemy> enemies;
     std::vector<Bullet> bullets;
-
-    bool isRunning;
+    std::vector<Enemy> enemies;
     int score;
+    bool isRunning;
 };
 
 #endif

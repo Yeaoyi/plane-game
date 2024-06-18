@@ -1,21 +1,25 @@
 #include "Game.h"
 #include <iostream>
-#include <conio.h> // for _kbhit() and _getch()
-#include <windows.h> // for Sleep()
+#include <conio.h>
 
-Game::Game() : isRunning(true) {
-    // 初始化游戏，如创建玩家飞机和敌人
+Game::Game() : player(screenWidth / 2, screenHeight - 2, 2, 3), score(0), isRunning(true) {
+    init();
     hideCursor();
+}
+
+void Game::init() {
+    bullets.clear();
+    enemies.clear();
+    score = 0;
+    system("color 0E"); // 设置控制台的字符颜色为白色，背景色为黑色
 }
 
 void Game::run() {
     while (isRunning) {
-        clearScreen();
         processInput();
-        updateScore(); // 更新分数
         update();
         render();
-        Sleep(100); // 控制游戏循环的速度
+        Sleep(50);
     }
 }
 
@@ -23,55 +27,110 @@ void Game::processInput() {
     if (_kbhit()) {
         char ch = _getch();
         switch (ch) {
-        case 'w': // Up
+        case 'w':
             player.moveUp();
             break;
-        case 's': // Down
+        case 's':
             player.moveDown();
             break;
-        case 'a': // Left
+        case 'a':
             player.moveLeft();
             break;
-        case 'd': // Right
+        case 'd':
             player.moveRight();
             break;
-        case ' ': // Shoot
-            player.shoot();
+        case ' ':
+            player.shoot(bullets);
             break;
-        case 27: // ESC to exit
+        case 27:
             isRunning = false;
             break;
         }
     }
 }
 
+
 void Game::update() {
-    // 更新游戏逻辑，如玩家和敌人的位置、子弹的移动等
-    for (auto& enemy : enemies) {
-        enemy.move();
-    }
-    for (auto& bullet : bullets) {
-        bullet.move();
-    }
-    // 检测碰撞等
+    floatBullet();
+    enemyFighter();
+    handleCollisions();
+    checkGameOver(); // 检查游戏结束条件
 }
 
 void Game::render() {
-    // 渲染游戏场景
     clearScreen();
     player.render();
-    for (const auto& enemy : enemies) {
-        enemy.render();
-    }
     for (const auto& bullet : bullets) {
         bullet.render();
     }
-    // 显示当前分数
-    std::cout << "Score: " << score << std::endl;
+    for (const auto& enemy : enemies) {
+        enemy.render();
+    }
+    zeroXy(0, 0);
+    std::cout << "Score: " << score << "  Lives: " << player.getLives() << std::endl;
 }
 
-void Game::updateScore() {
-    // 在游戏中实现的逻辑，例如击败敌人或者持续存活时间等可以增加分数的操作
-    // 这里简单示范每帧增加1分
-    score++;
+void Game::floatBullet() {
+    for (auto& bullet : bullets) {
+        bullet.move();
+    }
+    bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [](const Bullet& bullet) {
+        return bullet.isDestroyed();
+        }), bullets.end());
+}
+
+void Game::enemyFighter() {
+    static int enemyTimer = 0;
+    if (enemyTimer++ % 10 == 0) {
+        enemies.push_back(Enemy(rand() % screenWidth, 0, 1));
+    }
+    for (auto& enemy : enemies) {
+        enemy.move();
+    }
+    enemies.erase(std::remove_if(enemies.begin(), enemies.end(), [](const Enemy& enemy) {
+        return enemy.getY() >= screenHeight;
+        }), enemies.end());
+}
+
+void Game::handleCollisions() {
+    for (auto bulletIt = bullets.begin(); bulletIt != bullets.end(); ) {
+        bool bulletDestroyed = false;
+        for (auto enemyIt = enemies.begin(); enemyIt != enemies.end(); ) {
+            if (bulletIt->getX() == enemyIt->getX() && bulletIt->getY() == enemyIt->getY()) {
+                bulletIt = bullets.erase(bulletIt);
+                enemyIt = enemies.erase(enemyIt);
+                score += 10;
+                bulletDestroyed = true;
+                break;
+            }
+            else {
+                ++enemyIt;
+            }
+        }
+        if (!bulletDestroyed) {
+            ++bulletIt;
+        }
+    }
+
+    for (auto enemyIt = enemies.begin(); enemyIt != enemies.end(); ) {
+        if (enemyIt->getX() == player.getX() && enemyIt->getY() == player.getY()) {
+            player.loseLife();
+            enemyIt = enemies.erase(enemyIt);
+        }
+        else {
+            ++enemyIt;
+        }
+    }
+}
+
+void Game::checkGameOver() {
+    if (player.getLives() <= 0) {
+        isRunning = false;
+        clearScreen();
+        zeroXy(screenWidth / 2 - 5, screenHeight / 2);
+        std::cout << "Game Over!" << std::endl;
+        zeroXy(screenWidth / 2 - 7, screenHeight / 2 + 1);
+        std::cout << "Final Score: " << score << std::endl;
+        Sleep(2000); // 等待2秒后退出游戏
+    }
 }

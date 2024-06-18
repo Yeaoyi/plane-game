@@ -1,11 +1,11 @@
-#pragma once
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
 #include <windows.h>
+#include <iostream>
 
-bool checkCollision(int x1, int y1, int x2, int y2, int width, int height);
-void clearScreen();
+void zeroXy(int x, int y);
 void hideCursor();
+void clearScreen();
 
 #endif

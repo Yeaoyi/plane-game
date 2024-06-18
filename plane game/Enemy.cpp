@@ -1,15 +1,20 @@
 #include "Enemy.h"
-#include <iostream>
 
-Enemy::Enemy(int startX, int startY) : x(startX), y(startY), speed(3) {
-    // 初始化敌人位置和速度
-}
+Enemy::Enemy(int startX, int startY, int speed) : x(startX), y(startY), speed(speed) {}
 
 void Enemy::move() {
-    // 处理敌人移动逻辑
     y += speed;
 }
 
 void Enemy::render() const {
-    std::cout << "\033[" << y << ";" << x << "H" << "E";
+    zeroXy(x, y);
+    std::cout << "V";
+}
+
+int Enemy::getX() const {
+    return x;
+}
+
+int Enemy::getY() const {
+    return y;
 }
